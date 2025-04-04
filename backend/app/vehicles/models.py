@@ -4,7 +4,6 @@ from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk, str_uniq
-from app.trip_sheets.models import TripSheet
 
 
 class VehicleType(enum.Enum):

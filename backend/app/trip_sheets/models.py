@@ -4,8 +4,6 @@ from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk
-from app.orders.models import Order
-from app.vehicles.models import Vehicle
 
 
 class TripSheet(Base):
