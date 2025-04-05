@@ -1,14 +1,13 @@
-import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk, str_uniq
+from app.enums import UserRole
 
-
-class UserRole(enum.Enum):
-    ADMIN = "admin"
-    DISPATCHER = "dispatcher"
+if TYPE_CHECKING:
+    from app.models import Order
 
 
 class User(Base):
@@ -20,7 +19,6 @@ class User(Base):
         nullable=False,
     )
 
-    orders: Mapped["Order"] = relationship(
-        "Order",
+    orders: Mapped[list["Order"]] = relationship(
         back_populates="created_by",
     )

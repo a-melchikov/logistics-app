@@ -1,15 +1,13 @@
-import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk, str_uniq
+from app.enums import VehicleType
 
-
-class VehicleType(enum.Enum):
-    TRUCK = "truck"
-    VAN = "van"
-    CAR = "car"
+if TYPE_CHECKING:
+    from app.models import TripSheet
 
 
 class Vehicle(Base):
@@ -21,8 +19,7 @@ class Vehicle(Base):
     )
     license_plate: Mapped[str_uniq]
 
-    trip_sheets: Mapped["TripSheet"] = relationship(
-        "TripSheet",
+    tripsheets: Mapped[list["TripSheet"]] = relationship(
         back_populates="vehicle",
     )
 

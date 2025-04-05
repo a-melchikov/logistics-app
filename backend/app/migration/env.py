@@ -11,10 +11,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from app.database import DATABASE_URL, Base
-from app.orders.models import Order
-from app.trip_sheets.models import TripSheet
-from app.users.models import User
-from app.vehicles.models import Vehicle
+from app.models import Order, TripSheet, User, Vehicle
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

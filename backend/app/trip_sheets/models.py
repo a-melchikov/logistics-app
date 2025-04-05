@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk
+
+if TYPE_CHECKING:
+    from app.models import Order, Vehicle
 
 
 class TripSheet(Base):
@@ -26,12 +30,10 @@ class TripSheet(Base):
     )
 
     vehicle: Mapped["Vehicle"] = relationship(
-        "Vehicle",
-        back_populates="trip_sheets",
+        back_populates="tripsheets",
     )
     order: Mapped["Order"] = relationship(
-        "Order",
-        back_populates="trip_sheet_entries",
+        back_populates="tripsheet_entries",
     )
 
     def __str__(self):

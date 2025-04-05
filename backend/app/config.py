@@ -29,3 +29,7 @@ def get_db_url() -> str:
 
 def get_auth_data() -> dict[str, str]:
     return {"secret_key": settings.SECRET_KEY, "algorithm": settings.ALGORITHM}
+
+
+if __name__ == "__main__":
+    print(get_db_url())

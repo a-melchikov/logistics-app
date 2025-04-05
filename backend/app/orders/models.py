@@ -1,16 +1,14 @@
-import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk
+from app.enums import OrderStatus
 
-
-class OrderStatus(enum.Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
+if TYPE_CHECKING:
+    from app.models import TripSheet, User
 
 
 class Order(Base):
@@ -31,13 +29,11 @@ class Order(Base):
         nullable=False,
     )
     created_by: Mapped["User"] = relationship(
-        "User",
         back_populates="orders",
     )
 
-    trip_sheet_entries: Mapped["TripSheet"] = relationship(
-        "TripSheet",
-        back_populates="order",
+    tripsheet_entries: Mapped[list["TripSheet"]] = relationship(
+        back_populates="order", cascade="all, delete-orphan"
     )
 
     def __str__(self):
