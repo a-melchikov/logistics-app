@@ -20,7 +20,9 @@ class OrderCreate(BaseModel):
     cost: int = Field(..., ge=1, description="Стоимость заказа. Должна быть больше 0")
 
     order_date: datetime = Field(
-        ..., description="Дата и время оформления заказа в формате ГГГГ-ММ-ДД ЧЧ:ММ:СС"
+        ...,
+        description="Дата и время оформления заказа в формате ГГГГ-ММ-ДД ЧЧ:ММ:СС",
+        json_schema_extra={"example": datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
     )
 
     status: OrderStatus = Field(
@@ -91,7 +93,10 @@ class OrderUpdate(BaseModel):
 
 
 class OrderResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config: ConfigDict = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")},
+    )
 
     id: int
     client_name: str
