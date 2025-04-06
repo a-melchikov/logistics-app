@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base, int_pk
@@ -34,6 +34,10 @@ class TripSheet(Base):
     )
     order: Mapped["Order"] = relationship(
         back_populates="tripsheet_entries",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("vehicle_id", "order_id", name="uix_vehicle_order"),
     )
 
     def __str__(self):

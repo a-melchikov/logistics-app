@@ -4,7 +4,6 @@ from fastapi import APIRouter, Body, Depends, Path, Response, status
 
 from app.exceptions import VehicleNotFoundException
 from app.orders.schemas import OrderResponse
-from app.trip_sheets.dao import TripSheetDAO
 from app.vehicles.dao import VehicleDAO
 from app.vehicles.rb import RBVehicle
 from app.vehicles.schemas import VehicleCreate, VehicleResponse

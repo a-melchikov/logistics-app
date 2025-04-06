@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.logging_config import setup_logging
 from app.orders.router import router as router_orders
+from app.trip_sheets.router import router as router_trip_sheets
 from app.vehicles.router import router as router_vehicles
 
 setup_logging()
@@ -30,3 +31,4 @@ def root() -> dict[str, str]:
 
 app.include_router(router_orders)
 app.include_router(router_vehicles)
+app.include_router(router_trip_sheets)
