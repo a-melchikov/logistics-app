@@ -3,6 +3,8 @@ import logging
 from fastapi import APIRouter, Body, Depends, Path, Response, status
 
 from app.exceptions import VehicleNotFoundException
+from app.orders.schemas import OrderResponse
+from app.trip_sheets.dao import TripSheetDAO
 from app.vehicles.dao import VehicleDAO
 from app.vehicles.rb import RBVehicle
 from app.vehicles.schemas import VehicleCreate, VehicleResponse
@@ -84,3 +86,26 @@ async def delete_vehicle(
         raise VehicleNotFoundException
     logger.info(f"Удалена машина с ID {vehicle_id}")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/{vehicle_id}/orders",
+    response_model=list[OrderResponse],
+    summary="История заказов машины",
+    description="Возвращает список всех заказов для указанной машины по её ID.",
+    responses={404: {"description": "Машина не найдена"}},
+)
+async def get_vehicle_orders_history(
+    vehicle_id: int = Path(
+        ..., description="ID машины, для которой нужно получить историю заказов"
+    ),
+) -> list[OrderResponse]:
+    orders = await VehicleDAO.get_orders_for_vehicle(vehicle_id)
+
+    if not orders:
+        logger.warning(f"Не найдены заказы для машины с ID {vehicle_id}")
+        raise VehicleNotFoundException
+
+    logger.info(f"История заказов для машины с ID {vehicle_id}: {len(orders)} заказов")
+
+    return orders
