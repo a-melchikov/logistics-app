@@ -17,6 +17,7 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole),
         nullable=False,
+        default=UserRole.DISPATCHER,
     )
 
     orders: Mapped[list["Order"]] = relationship(
