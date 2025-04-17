@@ -1,11 +1,12 @@
 const API_URL = "http://localhost:8000";
 
-export async function getAllOrders() {
-  const res = await fetch(`${API_URL}/orders/`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Ошибка загрузки заказов");
-  return res.json();
+export async function getAllOrders(filters = {}) {
+  const params = new URLSearchParams(filters as any).toString();
+  const response = await fetch(`${API_URL}/orders/?${params}`);
+  if (!response.ok) {
+    throw new Error("Ошибка при получении заказов");
+  }
+  return await response.json();
 }
 
 export async function getOrderById(orderId: number) {

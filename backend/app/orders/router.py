@@ -24,7 +24,7 @@ router = APIRouter(
 )
 async def get_all_orders(request_body: RBOrder = Depends()) -> list[OrderResponse]:
     logger.info(f"Запрос на получение заказов с параметрами: {request_body.to_dict()}")
-    orders = await OrderDAO.find_all(**request_body.to_dict())
+    orders = await OrderDAO.find_all_filtered(**request_body.to_dict())
     logger.info(f"Найдено заказов: {len(orders)}")
     return orders
 

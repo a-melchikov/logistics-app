@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import LoadingSpinner from '@/components/LoadingSpinner.vue'
-import OrderCard from '@/components/OrderCard.vue'
+import { ref, onMounted, watch } from 'vue'
 import { getAllOrders } from '@/api/orders'
 
 interface Order {
@@ -16,20 +14,63 @@ const loading = ref(true)
 const error = ref('')
 const orders = ref<Order[]>([])
 
-onMounted(async () => {
+const filters = ref({
+    client_name: '',
+    cost_from: null as number | null,
+    cost_to: null as number | null,
+    order_date: '',
+    status: '',
+})
+
+async function fetchOrders() {
+    loading.value = true
     try {
-        orders.value = await getAllOrders()
+        const filteredParams = Object.fromEntries(
+            Object.entries(filters.value).filter(([_, v]) => v !== '' && v !== null)
+        )
+        orders.value = await getAllOrders(filteredParams)
     } catch (err: any) {
         error.value = err.message
     } finally {
         loading.value = false
     }
-})
+}
+
+onMounted(fetchOrders)
 </script>
 
 <template>
     <div class="container my-5">
         <h2 class="mb-4">Список заказов</h2>
+
+        <form class="row g-3 mb-4" @submit.prevent="fetchOrders">
+            <div class="col-md-3">
+                <input v-model="filters.client_name" type="text" class="form-control" placeholder="Клиент" />
+            </div>
+            <div class="col-md-2">
+                <input v-model.number="filters.cost_from" type="number" class="form-control"
+                    placeholder="Стоимость от" />
+            </div>
+
+            <div class="col-md-2">
+                <input v-model.number="filters.cost_to" type="number" class="form-control" placeholder="Стоимость до" />
+            </div>
+
+            <div class="col-md-2">
+                <input v-model="filters.order_date" type="date" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <select v-model="filters.status" class="form-select">
+                    <option value="">Статус</option>
+                    <option value="pending">В ожидании</option>
+                    <option value="in_progress">В процессе</option>
+                    <option value="completed">Завершён</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+            </div>
+        </form>
 
         <div v-if="loading" class="text-center">
             <div class="spinner-border text-primary" role="status"></div>
@@ -44,13 +85,16 @@ onMounted(async () => {
                         <div class="card-body">
                             <h5 class="card-title">Заказ #{{ order.id }}</h5>
                             <p class="card-text"><strong>Клиент:</strong> {{ order.client_name }}</p>
-                            <p class="card-text"><strong>Дата:</strong> {{ order.order_date }}</p>
+                            <p class="card-text"><strong>Дата:</strong> {{ new
+                                Date(order.order_date).toLocaleDateString() }}</p>
                             <p class="card-text"><strong>Стоимость:</strong> {{ order.cost }} ₽</p>
                             <span class="badge bg-secondary">{{ order.status }}</span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div v-if="!orders.length" class="alert alert-info mt-4">Нет заказов по заданным параметрам.</div>
         </div>
     </div>
 </template>
