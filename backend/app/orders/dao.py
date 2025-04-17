@@ -5,6 +5,7 @@ from sqlalchemy import and_, select
 from app.dao.base import BaseDAO
 from app.database import async_session_maker
 from app.enums import OrderStatus
+from app.exceptions import OrderNotFoundException
 from app.models import Order
 
 
@@ -52,3 +53,18 @@ class OrderDAO(BaseDAO):
 
             result = await session.execute(query)
             return result.scalars().all()
+
+    @classmethod
+    async def update_status(cls, order_id: int, status: str):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(Order.id == order_id)
+            result = await session.execute(query)
+            order = result.scalar_one_or_none()
+
+            if not order:
+                raise OrderNotFoundException
+
+            order.status = status
+
+            await session.commit()
+            return order

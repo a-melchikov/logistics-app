@@ -1,7 +1,9 @@
 const API_URL = "http://localhost:8000";
 
-export async function getAllVehicles() {
-  const res = await fetch(`${API_URL}/vehicles/`, {
+export async function getAllVehicles(params: Record<string, string>) {
+  const searchParams = new URLSearchParams(params).toString();
+
+  const res = await fetch(`${API_URL}/vehicles/?${searchParams}`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Ошибка загрузки машин");

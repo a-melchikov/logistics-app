@@ -62,3 +62,7 @@ IncorrectUsernameOrPasswordException = HTTPException(
 InsufficientPermissionsException = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав"
 )
+TripSheetConflictTimeException = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="Путевой лист для этого времени уже существует",
+)

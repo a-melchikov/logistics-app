@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.exceptions import (
     OrderNotFoundException,
     TripSheetConflictException,
+    TripSheetConflictTimeException,
     TripSheetNotFoundException,
     VehicleNotFoundException,
 )
@@ -108,13 +109,31 @@ async def create_trip_sheet(
         logger.warning(f"Заказ с ID {trip_sheet_data.order_id} не найден")
         raise OrderNotFoundException
 
+    overlap = await TripSheetDAO.check_time_overlap(
+        trip_sheet_data.vehicle_id, trip_sheet_data.start_time, trip_sheet_data.end_time
+    )
+    if overlap:
+        logger.warning(
+            f"Путевой лист для машины с ID {trip_sheet_data.vehicle_id} уже существует на это время."
+        )
+        raise TripSheetConflictTimeException
+
     try:
         created_trip_sheet = await TripSheetDAO.add(**trip_sheet_data.model_dump())
         logger.info(f"Создан путевой лист с ID {created_trip_sheet.id}")
+
+        await OrderDAO.update_status(trip_sheet_data.order_id, "IN_PROGRESS")
+        logger.info(
+            f"Статус заказа с ID {trip_sheet_data.order_id} обновлён на 'in_progress'"
+        )
+
         return created_trip_sheet
     except IntegrityError as e:
         logger.error(f"Ошибка при создании путевого листа: {e}")
         raise TripSheetConflictException from e
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении статуса заказа: {e}")
+        raise
 
 
 @router.delete(
