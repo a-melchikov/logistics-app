@@ -29,11 +29,27 @@ onMounted(async () => {
 <template>
     <div class="container my-5">
         <h2 class="mb-4">Список машин</h2>
-        <LoadingSpinner v-if="loading" />
+
+        <div v-if="loading" class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+
         <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
         <div v-else>
-            <div class="list-group">
-                <VehicleCard v-for="vehicle in vehicles" :key="vehicle.id" :vehicle="vehicle" />
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                <div v-for="vehicle in vehicles" :key="vehicle.id" class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Машина #{{ vehicle.id }}</h5>
+                            <p class="card-text"><strong>Водитель:</strong> {{ vehicle.driver_name || '—' }}</p>
+                            <p class="card-text"><strong>Тип:</strong> {{ vehicle.vehicle_type || '—' }}</p>
+                            <p class="card-text"><strong>Госномер:</strong> {{ vehicle.license_plate || '—' }}</p>
+                            <RouterLink :to="`/vehicles/${vehicle.id}`" class="btn btn-outline-primary btn-sm mt-2">
+                                Подробнее</RouterLink>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

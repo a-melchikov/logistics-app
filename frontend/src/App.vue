@@ -1,39 +1,52 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+onMounted(() => {
+    auth.fetchMe()
+})
+
+const handleLogout = () => {
+    auth.logout()
+    router.push('/login')
+}
 </script>
 
 <template>
-    <header class="bg-light py-3 shadow-sm mb-4 fixed-top">
-        <div class="container d-flex justify-content-between align-items-center">
-            <!-- Логотип по центру -->
-            <div class="flex-grow-1 text-center">
-                <h1 class="h3 font-weight-bold">Логистика</h1>
+    <div id="app" class="d-flex flex-column min-vh-100">
+        <!-- Header -->
+        <header class="bg-primary text-white py-3 shadow">
+            <div class="container d-flex justify-content-between align-items-center">
+                <h1 class="h4 mb-0">Логистика</h1>
+                <nav class="d-flex gap-3">
+                    <RouterLink class="text-white fw-semibold" to="/orders">Заказы</RouterLink>
+                    <RouterLink class="text-white fw-semibold" to="/vehicles">Машины</RouterLink>
+                    <RouterLink v-if="auth.user?.role === 'admin'" class="text-white fw-semibold" to="/admin">Админка
+                    </RouterLink>
+
+                    <template v-if="auth.user">
+                        <span class="text-white">Привет, {{ auth.user.username }}</span>
+                        <button class="btn btn-outline-light btn-sm" @click="handleLogout">Выйти</button>
+                    </template>
+                    <template v-else>
+                        <RouterLink class="btn btn-light btn-sm" to="/login">Вход</RouterLink>
+                    </template>
+                </nav>
             </div>
-            <!-- Навигация справа -->
-            <nav>
-                <RouterLink to="/orders" class="btn btn-link text-primary">Заказы</RouterLink>
-                <RouterLink to="/vehicles" class="btn btn-link text-primary">Машины</RouterLink>
-                <RouterLink to="/admin" class="btn btn-link text-primary">Админка</RouterLink>
-                <RouterLink to="/login" class="btn btn-link text-primary">Вход</RouterLink>
-            </nav>
-        </div>
-    </header>
+        </header>
 
-    <main class="container px-4 mt-5">
-        <RouterView />
-    </main>
+        <!-- Main content -->
+        <main class="flex-grow-1 container py-4">
+            <RouterView />
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-light text-center text-muted py-3 border-top mt-auto">
+            &copy; 2025 Логистика
+        </footer>
+    </div>
 </template>
-
-<style scoped>
-header {
-    z-index: 1000;
-}
-
-main {
-    min-height: 80vh;
-}
-
-.mt-5 {
-    margin-top: 5rem; /* Чтобы контент не перекрывался шапкой */
-}
-</style>

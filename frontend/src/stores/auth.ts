@@ -1,10 +1,8 @@
-// stores/auth.ts
-import { defineStore } from 'pinia';
+import { defineStore } from "pinia";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as null | { id: number; username: string; role: string },
-    token: "",
   }),
 
   actions: {
@@ -18,42 +16,34 @@ export const useAuthStore = defineStore("auth", {
 
       if (!res.ok) throw new Error("Неверные данные");
 
-      const data = await res.json();
-      this.token = data.access_token;
-      document.cookie = `users_access_token=${this.token}; HttpOnly`;
-
-      await this.fetchMe(); // Запрос данных о текущем пользователе после авторизации
+      await this.fetchMe();
     },
 
     async fetchMe() {
-      const token = this.getTokenFromCookie();
-      if (!token) return;
-
-      const res = await zfetch("http://localhost:8000/auth/me/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch("http://localhost:8000/auth/me/", {
+        method: "GET",
+        credentials: "include",
       });
 
       if (res.ok) {
         this.user = await res.json();
+      } else {
+        this.user = null;
       }
     },
 
-    logout() {
-      this.token = "";
-      this.user = null;
-      document.cookie = "users_access_token=; Max-Age=0";
+    async logout() {
+      fetch("http://localhost:8000/auth/logout/", {
+        method: "POST",
+        credentials: "include",
+      }).finally(() => {
+        this.user = null;
+        document.cookie = "users_access_token=; Max-Age=0";
+      });
     },
 
-    getTokenFromCookie(): string | null {
-      const match = document.cookie.match(new RegExp("(^| )users_access_token=([^;]+)"));
-      return match ? match[2] : null;
-    },
-
-    // Проверка авторизации
     isAuthenticated() {
-      return this.token !== "" && this.user !== null;
-    }
+      return this.user !== null;
+    },
   },
 });
