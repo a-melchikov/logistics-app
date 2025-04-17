@@ -13,6 +13,8 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 from app.database import DATABASE_URL, Base
 from app.models import Order, TripSheet, User, Vehicle
 
+print("Using DB:", DATABASE_URL)
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

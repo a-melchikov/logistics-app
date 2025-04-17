@@ -3,8 +3,7 @@ INSERT INTO users (username, hashed_password, role)
 VALUES
     ('admin1', 'hashed_password_1', 'ADMIN'::userrole),
     ('dispatcher1', 'hashed_password_2', 'DISPATCHER'::userrole),
-    ('dispatcher2', 'hashed_password_3', 'DISPATCHER'::userrole),
-ON CONFLICT DO NOTHING;
+    ('dispatcher2', 'hashed_password_3', 'DISPATCHER'::userrole);
 
 -- Вставляем тестовые заказы
 INSERT INTO orders (client_name, cost, order_date, status, created_by_id)
@@ -17,8 +16,7 @@ VALUES
     ('Клиент Е', 9500, '2024-04-06 14:30:00', 'IN_PROGRESS'::orderstatus, 3),
     ('Клиент Ж', 11000, '2024-04-07 10:00:00', 'PENDING'::orderstatus, 1),
     ('Клиент И', 6000, '2024-04-03 09:00:00', 'PENDING'::orderstatus, 2),
-    ('Клиент Й', 4000, '2024-04-03 13:00:00', 'PENDING'::orderstatus, 2),
-ON CONFLICT DO NOTHING;
+    ('Клиент Й', 4000, '2024-04-03 13:00:00', 'PENDING'::orderstatus, 2);
 
 -- Вставляем тестовые машины
 INSERT INTO vehicles (driver_name, vehicle_type, license_plate)
@@ -28,8 +26,7 @@ VALUES
     ('Михаил Сидоров', 'CAR'::vehicletype, 'С789КТ55'),
     ('Елена Васильева', 'TRUCK'::vehicletype, 'Т987МН34'),
     ('Дмитрий Фёдоров', 'VAN'::vehicletype, 'Е123ОК12'),
-    ('Оксана Кузнецова', 'CAR'::vehicletype, 'К654ПТ90')
-ON CONFLICT (license_plate) DO NOTHING;
+    ('Оксана Кузнецова', 'CAR'::vehicletype, 'К654ПТ90');
 
 -- Вставляем тестовые путевые листы
 INSERT INTO tripsheets (vehicle_id, order_id, start_time, end_time)
@@ -43,5 +40,4 @@ VALUES
     (4, 7, '2024-04-07 09:00:00', '2024-04-07 15:00:00'),  -- Елена Васильева выполняет заказ 7
     (5, 8, '2024-04-06 08:00:00', '2024-04-06 14:00:00'),  -- Дмитрий Фёдоров выполняет заказ 8
     (5, 3, '2024-03-28 12:00:00', '2024-03-28 18:00:00'),  -- Дмитрий Фёдоров выполняет заказ 3
-    (6, 9, '2024-04-07 09:30:00', '2024-04-07 16:00:00')   -- Оксана Кузнецова выполняет заказ 9
-ON CONFLICT DO NOTHING;
+    (6, 9, '2024-04-07 09:30:00', '2024-04-07 16:00:00');   -- Оксана Кузнецова выполняет заказ 9

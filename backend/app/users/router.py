@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 
 from app.exceptions import (
     IncorrectUsernameOrPasswordException,
@@ -55,14 +55,13 @@ async def register_user(user_data: UserRegister) -> dict:
         401: {"description": "Неверное имя пользователя или пароль"},
     },
 )
-async def auth_user(response: Response, user_data: UserAuth):
+async def auth_user(user_data: UserAuth):
     check = await authenticate_user(
         username=user_data.username, password=user_data.password
     )
     if check is None:
         raise IncorrectUsernameOrPasswordException
     access_token = create_access_token({"sub": str(check.id)})
-    response.set_cookie(key="users_access_token", value=access_token, httponly=True)
     return {
         "ok": True,
         "access_token": access_token,
@@ -78,17 +77,6 @@ async def auth_user(response: Response, user_data: UserAuth):
 )
 async def get_me(user_data: User = Depends(get_current_user)):
     return user_data
-
-
-@router.post(
-    "/logout/",
-    summary="Выход из системы",
-    description="Удаляет куку с токеном, таким образом, выходя из системы.",
-    responses={200: {"description": "Пользователь успешно вышел из системы"}},
-)
-async def logout_user(response: Response):
-    response.delete_cookie(key="users_access_token")
-    return {"message": "Пользователь успешно вышел из системы"}
 
 
 @router.get(
