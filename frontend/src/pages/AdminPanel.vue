@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import OrderList from "@/components/OrderList.vue";
 import VehiclesList from "@/components/VehiclesList.vue";
 import UserManagement from "@/components/UserManagement.vue";
+import TripsheetsList from "@/components/TripsheetsList.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const auth = useAuthStore();
@@ -45,6 +46,10 @@ onMounted(async () => {
                     :class="{ 'btn btn-primary': selectedTab === 'vehicles', 'btn btn-secondary': selectedTab !== 'vehicles' }">
                     Машины
                 </button>
+                <button @click="selectedTab = 'tripsheets'"
+                    :class="{ 'btn btn-primary': selectedTab === 'tripsheets', 'btn btn-secondary': selectedTab !== 'tripsheets' }">
+                    Путевые листы
+                </button>
                 <button @click="selectedTab = 'users'"
                     :class="{ 'btn btn-primary': selectedTab === 'users', 'btn btn-secondary': selectedTab !== 'users' }">
                     Пользователи
@@ -58,6 +63,9 @@ onMounted(async () => {
                 </div>
                 <div v-if="selectedTab === 'vehicles'">
                     <VehiclesList />
+                </div>
+                <div v-if="selectedTab === 'tripsheets'">
+                    <TripsheetsList />
                 </div>
                 <div v-if="selectedTab === 'users'">
                     <UserManagement />
