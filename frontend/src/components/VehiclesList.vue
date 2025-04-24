@@ -20,6 +20,7 @@
                                 <th>Гос. номер</th>
                                 <th>ФИО водителя</th>
                                 <th>Тип машины</th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -28,6 +29,11 @@
                                 <td>{{ vehicle.license_plate }}</td>
                                 <td>{{ vehicle.driver_name }}</td>
                                 <td>{{ vehicle.vehicle_type }}</td>
+                                <td>
+                                    <button @click="handleDelete(vehicle.id)" class="btn btn-danger btn-sm">
+                                        Удалить
+                                    </button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -40,12 +46,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { deleteVehicle } from '@/api/vehicles';
 
 const vehicles = ref([]);
 const loading = ref(true);
 const error = ref('');
 
-onMounted(async () => {
+const fetchVehicles = async () => {
     try {
         const res = await fetch('http://localhost:8000/vehicles/', {
             method: 'GET',
@@ -64,5 +71,20 @@ onMounted(async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const handleDelete = async (vehicleId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить эту машину?')) return;
+
+    try {
+        await deleteVehicle(vehicleId);
+        await fetchVehicles();
+    } catch (err: any) {
+        error.value = err.message || 'Ошибка при удалении машины';
+    }
+};
+
+onMounted(() => {
+    fetchVehicles();
 });
 </script>

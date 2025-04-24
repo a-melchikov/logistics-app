@@ -24,6 +24,7 @@
                                 <th>Стоимость</th>
                                 <th>Дата заказа</th>
                                 <th>Статус</th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -33,6 +34,11 @@
                                 <td>{{ order.cost }}</td>
                                 <td>{{ order.order_date }}</td>
                                 <td>{{ order.status }}</td>
+                                <td>
+                                    <button @click="handleDelete(order.id)" class="btn btn-danger btn-sm">
+                                        Удалить
+                                    </button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -45,12 +51,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { deleteOrder } from '@/api/orders';
 
 const orders = ref([]);
 const loading = ref(true);
 const error = ref('');
 
-onMounted(async () => {
+const fetchOrders = async () => {
     try {
         const res = await fetch('http://localhost:8000/orders/', {
             method: 'GET',
@@ -69,5 +76,20 @@ onMounted(async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const handleDelete = async (orderId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этот заказ?')) return;
+
+    try {
+        await deleteOrder(orderId);
+        await fetchOrders();
+    } catch (err: any) {
+        error.value = err.message || 'Ошибка при удалении заказа';
+    }
+};
+
+onMounted(() => {
+    fetchOrders();
 });
 </script>
