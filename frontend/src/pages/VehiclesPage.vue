@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
-import VehicleCard from '@/components/VehicleCard.vue'
 import { getAllVehicles } from '@/api/vehicles'
 
 interface Vehicle {
@@ -78,9 +77,11 @@ onMounted(fetchVehicles)
                             <p class="card-text"><strong>Водитель:</strong> {{ vehicle.driver_name || '—' }}</p>
                             <p class="card-text"><strong>Тип:</strong> {{ vehicle.vehicle_type || '—' }}</p>
                             <p class="card-text"><strong>Госномер:</strong> {{ vehicle.license_plate || '—' }}</p>
-                            <RouterLink :to="`/vehicles/${vehicle.id}`" class="btn btn-outline-primary btn-sm mt-2">
-                                Подробнее
-                            </RouterLink>
+                            <div class="d-flex justify-content-end">
+                                <RouterLink :to="`/vehicles/${vehicle.id}`" class="btn btn-outline-primary btn-sm">
+                                    Подробнее
+                                </RouterLink>
+                            </div>
                         </div>
                     </div>
                 </div>

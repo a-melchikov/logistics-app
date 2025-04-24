@@ -145,12 +145,19 @@ onMounted(async () => {
             <div class="row row-cols-1 row-cols-md-2 g-4">
                 <div v-for="order in orders" :key="order.id" class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body d-flex flex-column">
                             <h5 class="card-title">Заказ #{{ order.id }}</h5>
-                            <p><strong>Клиент:</strong> {{ order.client_name }}</p>
-                            <p><strong>Дата:</strong> {{ new Date(order.order_date).toLocaleDateString() }}</p>
-                            <p><strong>Стоимость:</strong> {{ order.cost }} ₽</p>
-                            <span class="badge bg-secondary">{{ order.status }}</span>
+                            <p class="card-text"><strong>Клиент:</strong> {{ order.client_name || '—' }}</p>
+                            <p class="card-text"><strong>Дата:</strong> {{ new
+                                Date(order.order_date).toLocaleDateString() || '—' }}</p>
+                            <p class="card-text"><strong>Стоимость:</strong> {{ order.cost || '—' }} ₽</p>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="badge bg-secondary">{{ order.status }}</span>
+                                <RouterLink :to="`/orders/${order.id}`"
+                                    class="btn btn-outline-primary btn-sm align-self-start">
+                                    Подробнее
+                                </RouterLink>
+                            </div>
                         </div>
                     </div>
                 </div>
