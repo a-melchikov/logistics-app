@@ -70,3 +70,7 @@ UnableUpdateRoleException = HTTPException(
     status_code=status.HTTP_400_BAD_REQUEST,
     detail="Не удалось обновить роль пользователя",
 )
+InvalidRegisterToken = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail="Неверный токен регистрации",
+)

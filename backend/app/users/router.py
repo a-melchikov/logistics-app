@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Header, Response
 
+from app.config import settings
 from app.exceptions import (
     IncorrectUsernameOrPasswordException,
+    InvalidRegisterToken,
     PasswordMismatchException,
     UnableUpdateRoleException,
     UserAlreadyExistsException,
@@ -19,10 +21,16 @@ router = APIRouter(prefix="/auth", tags=["Авторизация"])
 @router.post(
     "/register/",
     summary="Регистрация пользователя",
-    description="Создаёт нового пользователя в системе. Проверяет, что пароль и подтверждение пароля совпадают.",
+    description="Создаёт нового пользователя, если передан правильный секретный токен в заголовке.",
     responses={201: {"description": "Пользователь успешно зарегистрирован"}},
 )
-async def register_user(user_data: UserRegister) -> dict:
+async def register_user(
+    user_data: UserRegister,
+    x_register_token: str = Header(...),
+) -> dict:
+    if x_register_token != settings.REGISTER_SECRET_TOKEN:
+        raise InvalidRegisterToken
+
     user = await UserDAO.find_one_or_none(username=user_data.username)
     if user:
         raise UserAlreadyExistsException

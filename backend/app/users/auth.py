@@ -7,7 +7,7 @@ from app.config import get_auth_data
 from app.users.dao import UserDAO
 
 
-def create_access_token(data: dict) -> str:
+def create_access_token(data: dict[str, str]) -> str:
     to_encode = data.copy()
     expire = datetime.now(UTC) + timedelta(days=1)
     to_encode.update({"exp": expire})
