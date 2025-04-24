@@ -38,6 +38,11 @@ const newOrder = ref({ client_name: '', cost: null as number | null, order_date:
 const createError = ref('')
 const creating = ref(false)
 
+// Computed property for sorted orders
+const sortedOrders = computed(() => {
+    return [...orders.value].sort((a, b) => a.id - b.id)
+})
+
 // Fetch current user and orders
 async function fetchUser() {
     try {
@@ -46,6 +51,7 @@ async function fetchUser() {
         console.error('Ошибка при получении пользователя:', err)
     }
 }
+
 async function fetchOrders() {
     loading.value = true
     try {
@@ -68,6 +74,7 @@ function openModal() {
     newOrder.value = { client_name: '', cost: null, order_date: now }
     showModal.value = true
 }
+
 function closeModal() {
     showModal.value = false
 }
@@ -143,7 +150,7 @@ onMounted(async () => {
         <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
         <div v-else>
             <div class="row row-cols-1 row-cols-md-2 g-4">
-                <div v-for="order in orders" :key="order.id" class="col">
+                <div v-for="order in sortedOrders" :key="order.id" class="col">
                     <div class="card h-100 shadow-sm">
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">Заказ #{{ order.id }}</h5>

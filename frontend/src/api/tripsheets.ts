@@ -28,7 +28,12 @@ export async function createTripsheet(tripsheet: {
     credentials: "include",
     body: JSON.stringify(tripsheet),
   });
-  if (!res.ok) throw new Error("Ошибка создания путевого листа");
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Ошибка создания путевого листа");
+  }
+
   return res.json();
 }
 
