@@ -24,3 +24,8 @@ class UserResponse(BaseModel):
     id: int = Field(..., description="Идентификатор пользователя")
     username: str = Field(..., description="Имя пользователя")
     role: UserRole = Field(..., description="Роль пользователя")
+
+
+class UpdateUserRole(BaseModel):
+    user_id: int = Field(..., description="Идентификатор пользователя")
+    new_role: UserRole = Field(..., description="Роль пользователя")

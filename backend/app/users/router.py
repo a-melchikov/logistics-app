@@ -3,13 +3,15 @@ from fastapi import APIRouter, Depends, Response
 from app.exceptions import (
     IncorrectUsernameOrPasswordException,
     PasswordMismatchException,
+    UnableUpdateRoleException,
     UserAlreadyExistsException,
+    UserNotFoundException,
 )
 from app.users.auth import authenticate_user, create_access_token, get_password_hash
 from app.users.dao import UserDAO
 from app.users.dependencies import get_current_admin_user, get_current_user
 from app.users.models import User
-from app.users.schemas import UserAuth, UserRegister
+from app.users.schemas import UpdateUserRole, UserAuth, UserRegister
 
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
 
@@ -100,3 +102,30 @@ async def logout_user(response: Response):
 )
 async def get_all_users(user_data: User = Depends(get_current_admin_user)):
     return await UserDAO.find_all()
+
+
+@router.patch(
+    "/update_role/",
+    summary="Изменение роли пользователя",
+    description="Позволяет администратору изменить роль пользователя по его ID.",
+    responses={
+        200: {"description": "Роль успешно обновлена"},
+        404: {"description": "Пользователь не найден"},
+    },
+)
+async def update_user_role(
+    data: UpdateUserRole,
+    _: User = Depends(get_current_admin_user),
+):
+    user = await UserDAO.find_one_or_none_by_id(data.user_id)
+    if not user:
+        raise UserNotFoundException
+
+    updated_rows = await UserDAO.update({"id": data.user_id}, role=data.new_role)
+
+    if updated_rows == 0:
+        raise UnableUpdateRoleException
+
+    return {
+        "message": f"Роль пользователя с ID {data.user_id} успешно обновлена на {data.new_role}"
+    }

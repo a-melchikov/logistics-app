@@ -66,3 +66,7 @@ TripSheetConflictTimeException = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
     detail="Путевой лист для этого времени уже существует",
 )
+UnableUpdateRoleException = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST,
+    detail="Не удалось обновить роль пользователя",
+)

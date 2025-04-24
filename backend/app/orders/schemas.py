@@ -25,11 +25,6 @@ class OrderCreate(BaseModel):
         json_schema_extra={"example": datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
     )
 
-    status: OrderStatus = Field(
-        OrderStatus.PENDING,
-        description="Статус заказа (pending, in_progress, completed)",
-    )
-
     created_by_id: int = Field(
         ..., ge=1, description="ID пользователя, который создал заказ (диспетчер)"
     )

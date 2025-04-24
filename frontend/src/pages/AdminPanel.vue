@@ -1,31 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import OrderList from "@/components/OrderList.vue";
+import VehiclesList from "@/components/VehiclesList.vue";
+import UserManagement from "@/components/UserManagement.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const auth = useAuthStore();
-const users = ref([]);
+const selectedTab = ref("orders");
 const loading = ref(true);
 const error = ref("");
 
 onMounted(async () => {
     try {
         await auth.fetchMe();
-
         if (!auth.isAuthenticated()) {
             error.value = "Вы не авторизованы!";
-            loading.value = false;
-            return;
         }
-
-        const res = await fetch("http://localhost:8000/auth/all_users/", {
-            credentials: "include",
-        });
-
-        if (!res.ok) throw new Error("Ошибка при загрузке пользователей");
-
-        users.value = await res.json();
-    } catch (err: any) {
-        error.value = err.message;
+    } catch (err) {
+        error.value = "Ошибка при аутентификации";
     } finally {
         loading.value = false;
     }
@@ -34,49 +26,48 @@ onMounted(async () => {
 
 <template>
     <div class="container my-5">
-        <h2 class="mb-4">Панель администратора</h2>
+        <!-- Показываем только если авторизованы и нет ошибки -->
+        <template v-if="auth.isAuthenticated() && !error">
+            <h2 class="mb-4">Панель администратора</h2>
 
-        <!-- Загрузка -->
-        <div v-if="loading" class="text-center">
-            <div class="spinner-border text-primary" role="status"></div>
-        </div>
+            <!-- Загрузка -->
+            <div v-if="loading" class="text-center">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
 
-        <!-- Ошибка -->
-        <div v-if="error" class="alert alert-danger mt-3">
-            {{ error }}
-        </div>
+            <!-- Переключение вкладок -->
+            <div v-if="!loading" class="mb-3">
+                <button @click="selectedTab = 'orders'"
+                    :class="{ 'btn btn-primary': selectedTab === 'orders', 'btn btn-secondary': selectedTab !== 'orders' }">
+                    Заказы
+                </button>
+                <button @click="selectedTab = 'vehicles'"
+                    :class="{ 'btn btn-primary': selectedTab === 'vehicles', 'btn btn-secondary': selectedTab !== 'vehicles' }">
+                    Машины
+                </button>
+                <button @click="selectedTab = 'users'"
+                    :class="{ 'btn btn-primary': selectedTab === 'users', 'btn btn-secondary': selectedTab !== 'users' }">
+                    Пользователи
+                </button>
+            </div>
 
-        <!-- Список пользователей -->
-        <div v-else>
-            <div v-if="users.length">
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Имя пользователя</th>
-                                <th scope="col">Роль</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="user in users" :key="user.id">
-                                <td>{{ user.id }}</td>
-                                <td>{{ user.username }}</td>
-                                <td>
-                                    <span class="badge" :class="{
-                                        'bg-primary': user.role === 'admin',
-                                        'bg-secondary': user.role === 'manager',
-                                        'bg-info': user.role === 'user',
-                                    }">
-                                        {{ user.role }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Таблицы -->
+            <div v-if="!loading">
+                <div v-if="selectedTab === 'orders'">
+                    <OrderList />
+                </div>
+                <div v-if="selectedTab === 'vehicles'">
+                    <VehiclesList />
+                </div>
+                <div v-if="selectedTab === 'users'">
+                    <UserManagement />
                 </div>
             </div>
-            <div v-else class="alert alert-info">Нет пользователей для отображения.</div>
+        </template>
+
+        <!-- Сообщение об ошибке (неавторизованный доступ) -->
+        <div v-if="error" class="alert alert-danger mt-3">
+            {{ error }}
         </div>
     </div>
 </template>

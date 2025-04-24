@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, defineProps } from 'vue'
-import { getTripsheetsForVehicle } from '@/api/tripsheets'
+import { getTripsheetsForVehicle, createTripsheet } from '@/api/tripsheets'
 import { getAllOrders } from '@/api/orders'
 
 const props = defineProps<{ vehicleId: number }>()
 
 const tripSheets = ref<any[]>([])
-const orders = ref<any[]>([])
+const pendingOrders = ref<any[]>([])
 const selectedOrder = ref<any>(null)
 const selectedTime = ref<string>('')
 const selectedRow = ref<number | null>(null)
@@ -15,20 +15,23 @@ const loading = ref(true)
 const error = ref('')
 const date = new Date().toISOString().slice(0, 10)
 
-onMounted(async () => {
+// Загрузка данных
+async function loadData() {
+    loading.value = true
     try {
         const data = await getTripsheetsForVehicle(props.vehicleId)
-        tripSheets.value = data.filter((sheet: any) =>
-            sheet.start_time.startsWith(date)
-        )
+        tripSheets.value = data.filter((sheet: any) => sheet.start_time.startsWith(date))
 
-        orders.value = await getAllOrders()
+        const allOrders = await getAllOrders()
+        pendingOrders.value = allOrders.filter((order: any) => order.status === 'pending')
     } catch (err: any) {
-        error.value = err.message
+        error.value = err.message || 'Ошибка загрузки данных'
     } finally {
         loading.value = false
     }
-})
+}
+
+onMounted(loadData)
 
 function getHour(timeStr: string): number {
     return new Date(timeStr).getHours()
@@ -60,32 +63,22 @@ function handleSelectOrder(order: any) {
 async function saveTripSheet() {
     if (!selectedOrder.value || !selectedRow.value) return
 
-    const startTime = `${date}T${(selectedRow.value - 1).toString().padStart(2, '0')}:00:00`
-    const endTime = `${date}T${selectedRow.value.toString().padStart(2, '0')}:00:00`
+    const start = `${date}T${(selectedRow.value - 1).toString().padStart(2, '0')}:00:00`
+    const end = `${date}T${selectedRow.value.toString().padStart(2, '0')}:00:00`
 
-    const tripSheetData = {
+    await createTripsheet({
         vehicle_id: props.vehicleId,
         order_id: selectedOrder.value.id,
-        start_time: startTime,
-        end_time: endTime
-    }
-
-    try {
-        await saveTripSheetAPI(tripSheetData)
-        tripSheets.value.push({ ...tripSheetData, order_id: selectedOrder.value.id })
-        selectedOrder.value = null
-        selectedRow.value = null
-        selectedTime.value = ''
-    } catch (err) {
-        error.value = 'Ошибка при сохранении путевого листа'
-    }
+        start_time: start,
+        end_time: end
+    })
 }
-</script>
 
+</script>
 
 <template>
     <div class="trip-sheet-widget">
-        <h3 class="mb-4">📅 Путевой лист на <strong>{{ date }}</strong></h3>
+        <h3 class="mb-4">Путевой лист на <strong>{{ date }}</strong></h3>
 
         <div v-if="loading" class="text-center my-4">
             <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
@@ -106,15 +99,15 @@ async function saveTripSheet() {
                         {{ (hour - 1).toString().padStart(2, '0') }}:00 - {{ hour.toString().padStart(2, '0') }}:00
                     </td>
 
-                    <!-- Если заказ начинается в этом часу -->
-                    <template v-if="tripSheets.find(ts => getHour(ts.start_time) === hour - 1)">
+                    <!-- Занятые часы -->
+                    <template v-if="tripSheets.some(ts => getHour(ts.start_time) === hour - 1)">
                         <template v-for="sheet in tripSheets" :key="sheet.id">
                             <template v-if="getHour(sheet.start_time) === hour - 1">
                                 <td :rowspan="getDurationInHours(sheet.start_time, sheet.end_time)"
                                     class="bg-info bg-opacity-25 border-info">
                                     <div class="p-1">
                                         <span class="badge bg-info text-dark mb-1">Заказ #{{ sheet.order_id
-                                        }}</span><br />
+                                            }}</span><br />
                                         <small>{{ formatTimeRange(sheet.start_time, sheet.end_time) }}</small>
                                     </div>
                                 </td>
@@ -122,7 +115,7 @@ async function saveTripSheet() {
                         </template>
                     </template>
 
-                    <!-- Если час не занят (и не покрыт rowspan'ом) -->
+                    <!-- Свободные часы -->
                     <template v-else-if="!tripSheets.some(ts => {
                         const start = getHour(ts.start_time)
                         const end = getHour(ts.end_time)
@@ -134,39 +127,39 @@ async function saveTripSheet() {
             </tbody>
         </table>
 
-        <!-- Модальное окно для выбора заказа и времени -->
-        <div v-if="selectedRow !== null" class="modal fade show" style="display: block;" tabindex="-1"
-            aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <!-- Модальное окно -->
+        <div v-if="selectedRow !== null" class="modal fade show d-block" tabindex="-1" aria-labelledby="modalLabel">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Выбор заказа для {{ selectedTime }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                            @click="selectedRow = null"></button>
+                        <h5 class="modal-title" id="modalLabel">Выбор заказа для {{ selectedTime }}</h5>
+                        <button type="button" class="btn-close" @click="selectedRow = null"></button>
                     </div>
                     <div class="modal-body">
-                        <div v-if="orders.length">
+                        <div v-if="pendingOrders.length">
                             <ul class="list-group">
-                                <li v-for="order in orders" :key="order.id" class="list-group-item"
+                                <li v-for="order in pendingOrders" :key="order.id" class="list-group-item"
+                                    :class="{ active: selectedOrder && selectedOrder.id === order.id }"
                                     @click="handleSelectOrder(order)">
                                     Заказ #{{ order.id }}: {{ order.client_name }}
+                                    <span class="badge bg-warning text-dark float-end">PENDING</span>
                                 </li>
                             </ul>
                         </div>
                         <div v-else>
-                            <p>Нет доступных заказов.</p>
+                            <p>Нет доступных заказов со статусом PENDING.</p>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click="selectedRow = null">Закрыть</button>
-                        <button type="button" class="btn btn-primary" @click="saveTripSheet">Сохранить</button>
+                        <button type="button" class="btn btn-primary" :disabled="!selectedOrder"
+                            @click="saveTripSheet">Сохранить</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </template>
-
 
 <style scoped>
 .trip-sheet-widget {
@@ -177,7 +170,16 @@ td {
     transition: background-color 0.2s ease;
 }
 
-td.bg-info {
+td.text-muted {
     cursor: pointer;
+}
+
+.list-group-item {
+    cursor: pointer;
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    color: white;
 }
 </style>
