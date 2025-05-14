@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
@@ -62,6 +62,7 @@ const handleLogout = async () => {
                 Добро пожаловать, <strong>{{ auth.user.username }}</strong>!<br />
                 Ваша роль: <strong>{{ auth.user.role }}</strong>
             </p>
+            <button @click="handleLogout" class="btn btn-danger w-100">Выйти</button>
         </div>
     </div>
 </template>

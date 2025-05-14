@@ -7,6 +7,8 @@ from app.orders.dao import OrderDAO
 from app.orders.rb import RBOrder
 from app.orders.schemas import OrderCreate, OrderResponse
 from app.users.dao import UserDAO
+from app.users.dependencies import get_current_admin_user
+from app.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +61,7 @@ async def create_order(
     order_data: OrderCreate = Body(
         ..., description="Данные для создания нового заказа"
     ),
+    _: User = Depends(get_current_admin_user),
 ) -> OrderResponse:
     logger.info(f"Создание заказа: {order_data}")
     user = await UserDAO.find_one_or_none_by_id(order_data.created_by_id)
@@ -79,6 +82,7 @@ async def create_order(
 )
 async def delete_order(
     order_id: int = Path(..., description="ID заказа, который нужно удалить"),
+    _: User = Depends(get_current_admin_user),
 ) -> Response:
     logger.info(f"Попытка удалить заказ с ID {order_id}")
     deleted_count = await OrderDAO.delete(id=order_id)

@@ -4,6 +4,8 @@ from fastapi import APIRouter, Body, Depends, Path, Response, status
 
 from app.exceptions import VehicleNotFoundException
 from app.orders.schemas import OrderResponse
+from app.users.dependencies import get_current_admin_user
+from app.users.models import User
 from app.vehicles.dao import VehicleDAO
 from app.vehicles.rb import RBVehicle
 from app.vehicles.schemas import VehicleCreate, VehicleResponse
@@ -61,6 +63,7 @@ async def create_vehicle(
     vehicle_data: VehicleCreate = Body(
         ..., description="Данные для создания нового автомобиля"
     ),
+    _: User = Depends(get_current_admin_user),
 ) -> VehicleResponse:
     logger.info(f"Создание машины: {vehicle_data}")
     created_vehicle = await VehicleDAO.add(**vehicle_data.model_dump())
@@ -77,6 +80,7 @@ async def create_vehicle(
 )
 async def delete_vehicle(
     vehicle_id: int = Path(..., description="ID машины, которую нужно удалить"),
+    _: User = Depends(get_current_admin_user),
 ) -> Response:
     logger.info(f"Попытка удалить машину с ID {vehicle_id}")
     deleted_count = await VehicleDAO.delete(id=vehicle_id)

@@ -14,6 +14,8 @@ from app.orders.dao import OrderDAO
 from app.trip_sheets.dao import TripSheetDAO
 from app.trip_sheets.rb import RBTripSheet
 from app.trip_sheets.schemas import TripSheetCreate, TripSheetResponse
+from app.users.dependencies import get_current_admin_user
+from app.users.models import User
 from app.vehicles.dao import VehicleDAO
 
 logger = logging.getLogger(__name__)
@@ -98,6 +100,7 @@ async def create_trip_sheet(
     trip_sheet_data: TripSheetCreate = Body(
         ..., description="Данные для создания нового путевого листа"
     ),
+    _: User = Depends(get_current_admin_user),
 ) -> TripSheetResponse:
     vehicle = await VehicleDAO.find_one_or_none_by_id(trip_sheet_data.vehicle_id)
     if not vehicle:
@@ -147,6 +150,7 @@ async def delete_trip_sheet(
     trip_sheet_id: int = Path(
         ..., description="ID путевого листа, который нужно удалить"
     ),
+    _: User = Depends(get_current_admin_user),
 ) -> Response:
     logger.info(f"Попытка удалить путевой лист с ID {trip_sheet_id}")
     deleted_count = await TripSheetDAO.delete(id=trip_sheet_id)

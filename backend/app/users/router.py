@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, Header, Response
 
 from app.config import settings
@@ -9,9 +11,19 @@ from app.exceptions import (
     UserAlreadyExistsException,
     UserNotFoundException,
 )
-from app.users.auth import authenticate_user, create_access_token, get_password_hash
+from app.users.auth import (
+    authenticate_user,
+    create_access_token,
+    create_refresh_token,
+    get_password_hash,
+)
 from app.users.dao import UserDAO
-from app.users.dependencies import get_current_admin_user, get_current_user
+from app.users.dependencies import (
+    decode_token,
+    get_current_admin_user,
+    get_current_user,
+    get_refresh_token,
+)
 from app.users.models import User
 from app.users.schemas import UpdateUserRole, UserAuth, UserRegister
 
@@ -56,7 +68,7 @@ async def register_user(
                     "example": {
                         "ok": True,
                         "access_token": "string",
-                        "refresh_token": None,
+                        "refresh_token": "string",
                         "message": "Авторизация успешна",
                     }
                 }
@@ -66,20 +78,46 @@ async def register_user(
     },
 )
 async def auth_user(user_data: UserAuth, response: Response):
-    check = await authenticate_user(
+    user = await authenticate_user(
         username=user_data.username, password=user_data.password
     )
-    if check is None:
+    if not user:
         raise IncorrectUsernameOrPasswordException
 
-    access_token = create_access_token({"sub": str(check.id)})
-    response.set_cookie(key="users_access_token", value=access_token, httponly=True)
+    access_token = create_access_token(
+        {"sub": str(user.id)}, expires_delta=timedelta(minutes=15)
+    )
+    refresh_token = create_refresh_token({"sub": str(user.id)})
+
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+
     return {
         "ok": True,
         "access_token": access_token,
-        "refresh_token": None,
+        "refresh_token": refresh_token,
         "message": "Авторизация успешна",
     }
+
+
+@router.post(
+    "/refresh/",
+    summary="Обновление токена доступа",
+    description=(
+        "Использует Refresh Token из cookies для создания нового Access Token. "
+        "Если Refresh Token валиден и не истек, выдается новый Access Token."
+    ),
+)
+async def refresh_token(response: Response, token: str = Depends(get_refresh_token)):
+    payload = decode_token(token)
+    user_id = payload.get("sub")
+
+    access_token = create_access_token(
+        {"sub": str(user_id)}, expires_delta=timedelta(minutes=15)
+    )
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+
+    return {"access_token": access_token}
 
 
 @router.get(
@@ -98,7 +136,8 @@ async def get_me(user_data: User = Depends(get_current_user)):
     responses={200: {"description": "Пользователь успешно вышел из системы"}},
 )
 async def logout_user(response: Response):
-    response.delete_cookie(key="users_access_token")
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
     return {"message": "Пользователь успешно вышел из системы"}
 
 

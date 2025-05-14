@@ -36,17 +36,16 @@ onMounted(async () => {
                 <div class="spinner-border text-primary" role="status"></div>
             </div>
 
-            <!-- Переключение вкладок -->
             <div v-if="!loading" class="mb-3">
-                <button @click="selectedTab = 'orders'"
+                <button @click="selectedTab = 'orders'" class="me-2"
                     :class="{ 'btn btn-primary': selectedTab === 'orders', 'btn btn-secondary': selectedTab !== 'orders' }">
                     Заказы
                 </button>
-                <button @click="selectedTab = 'vehicles'"
+                <button @click="selectedTab = 'vehicles'" class="me-2"
                     :class="{ 'btn btn-primary': selectedTab === 'vehicles', 'btn btn-secondary': selectedTab !== 'vehicles' }">
                     Машины
                 </button>
-                <button @click="selectedTab = 'tripsheets'"
+                <button @click="selectedTab = 'tripsheets'" class="me-2"
                     :class="{ 'btn btn-primary': selectedTab === 'tripsheets', 'btn btn-secondary': selectedTab !== 'tripsheets' }">
                     Путевые листы
                 </button>
