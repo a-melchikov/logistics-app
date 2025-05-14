@@ -144,7 +144,7 @@ async def create_trip_sheet(
     "/{trip_sheet_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить путевой лист",
-    description="Удаляет путевой лист по ID. Возвращает статус 204, если удаление прошло успешно.",
+    description="Удаляет путевой лист по ID и возвращает статус заказа в pending. Возвращает статус 204, если удаление прошло успешно.",
     responses={404: {"description": "Путевой лист не найден"}},
 )
 async def delete_trip_sheet(
@@ -154,9 +154,18 @@ async def delete_trip_sheet(
     _: User = Depends(get_current_admin_user),
 ) -> Response:
     logger.info(f"Попытка удалить путевой лист с ID {trip_sheet_id}")
-    deleted_count = await TripSheetDAO.delete(id=trip_sheet_id)
-    if deleted_count == 0:
+
+    trip_sheet = await TripSheetDAO.find_one_or_none_by_id(trip_sheet_id)
+    if not trip_sheet:
         logger.warning(f"Путевой лист с ID {trip_sheet_id} не найден для удаления")
         raise TripSheetNotFoundException
-    logger.info(f"Удалён путевой лист с ID {trip_sheet_id}")
+
+    deleted_count = await TripSheetDAO.delete(id=trip_sheet_id)
+    if deleted_count == 0:
+        logger.warning(f"Путевой лист с ID {trip_sheet_id} не удален")
+        raise TripSheetNotFoundException
+
+    await OrderDAO.update_status(trip_sheet.order_id, "PENDING")
+    logger.info(f"Статус заказа с ID {trip_sheet.order_id} возвращен в pending")
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
