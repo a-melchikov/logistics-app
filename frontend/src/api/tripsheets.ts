@@ -49,9 +49,14 @@ export async function createTripsheet(tripsheet: {
   start_time: string;
   end_time: string;
 }): Promise<Tripsheet> {
+  const token = localStorage.getItem("access_token");
+
   const res = await fetch(`${API_URL}/tripsheets/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
     credentials: "include",
     body: JSON.stringify(tripsheet),
   });
@@ -64,9 +69,15 @@ export async function createTripsheet(tripsheet: {
   return res.json();
 }
 
+
 export async function deleteTripsheet(tripSheetId: number): Promise<void> {
+  const token = localStorage.getItem("access_token");
+
   const res = await fetch(`${API_URL}/tripsheets/${tripSheetId}`, {
     method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    },
     credentials: "include",
   });
 

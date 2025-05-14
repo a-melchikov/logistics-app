@@ -23,23 +23,33 @@ export async function createVehicle(vehicle: {
   vehicle_type: string;
   license_plate: string;
 }) {
+  const token = localStorage.getItem("access_token");
+
   const res = await fetch(`${API_URL}/vehicles/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     credentials: "include",
     body: JSON.stringify(vehicle),
   });
+
   if (!res.ok) throw new Error("Ошибка создания машины");
   return res.json();
 }
 
 export async function deleteVehicle(vehicleId: number) {
+  const token = localStorage.getItem("access_token");
+
   const res = await fetch(`${API_URL}/vehicles/${vehicleId}`, {
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     credentials: "include",
   });
+
   if (!res.ok) throw new Error("Ошибка удаления машины");
 }
 

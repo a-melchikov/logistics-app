@@ -15,7 +15,9 @@ const loading = ref(true)
 const error = ref('')
 const date = new Date().toISOString().slice(0, 10)
 
-// Загрузка данных
+const successMessage = ref<string>('')
+const errorMessage = ref<string>('')
+
 async function loadData() {
     loading.value = true
     try {
@@ -51,9 +53,10 @@ function formatTimeRange(start: string, end: string): string {
 }
 
 function handleFreeCellClick(row: number) {
-    selectedRow.value = row
-    selectedOrder.value = null
-    selectedTime.value = `${(row - 1).toString().padStart(2, '0')}:00 - ${row.toString().padStart(2, '0')}:00`
+    selectedRow.value = row;
+    selectedOrder.value = null;
+    selectedTime.value = `${(row - 1).toString().padStart(2, '0')}:00 - ${row.toString().padStart(2, '0')}:00`;
+    errorMessage.value = '';
 }
 
 function handleSelectOrder(order: any) {
@@ -61,17 +64,28 @@ function handleSelectOrder(order: any) {
 }
 
 async function saveTripSheet() {
-    if (!selectedOrder.value || !selectedRow.value) return
+    if (!selectedOrder.value || !selectedRow.value) return;
 
-    const start = `${date}T${(selectedRow.value - 1).toString().padStart(2, '0')}:00:00`
-    const end = `${date}T${selectedRow.value.toString().padStart(2, '0')}:00:00`
+    const start = `${date}T${(selectedRow.value - 1).toString().padStart(2, '0')}:00:00`;
+    const end = `${date}T${selectedRow.value.toString().padStart(2, '0')}:00:00`;
 
-    await createTripsheet({
-        vehicle_id: props.vehicleId,
-        order_id: selectedOrder.value.id,
-        start_time: start,
-        end_time: end
-    })
+    try {
+        await createTripsheet({
+            vehicle_id: props.vehicleId,
+            order_id: selectedOrder.value.id,
+            start_time: start,
+            end_time: end,
+        });
+        successMessage.value = 'Путевой лист успешно создан!';
+        errorMessage.value = '';
+
+        selectedRow.value = null;
+        selectedOrder.value = null;
+
+        loadData();
+    } catch (err: any) {
+        errorMessage.value = err.response?.data?.detail || 'Ошибка создания путевого листа';
+    }
 }
 
 </script>
@@ -79,6 +93,14 @@ async function saveTripSheet() {
 <template>
     <div class="trip-sheet-widget">
         <h3 class="mb-4">Путевой лист на <strong>{{ date }}</strong></h3>
+
+        <div v-if="successMessage" class="alert alert-success" role="alert">
+            {{ successMessage }}
+        </div>
+
+        <div v-if="errorMessage" class="alert alert-danger" role="alert">
+            {{ errorMessage }}
+        </div>
 
         <div v-if="loading" class="text-center my-4">
             <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
@@ -99,7 +121,6 @@ async function saveTripSheet() {
                         {{ (hour - 1).toString().padStart(2, '0') }}:00 - {{ hour.toString().padStart(2, '0') }}:00
                     </td>
 
-                    <!-- Занятые часы -->
                     <template v-if="tripSheets.some(ts => getHour(ts.start_time) === hour - 1)">
                         <template v-for="sheet in tripSheets" :key="sheet.id">
                             <template v-if="getHour(sheet.start_time) === hour - 1">
@@ -107,7 +128,7 @@ async function saveTripSheet() {
                                     class="bg-info bg-opacity-25 border-info">
                                     <div class="p-1">
                                         <span class="badge bg-info text-dark mb-1">Заказ #{{ sheet.order_id
-                                            }}</span><br />
+                                        }}</span><br />
                                         <small>{{ formatTimeRange(sheet.start_time, sheet.end_time) }}</small>
                                     </div>
                                 </td>
@@ -115,11 +136,10 @@ async function saveTripSheet() {
                         </template>
                     </template>
 
-                    <!-- Свободные часы -->
                     <template v-else-if="!tripSheets.some(ts => {
-                        const start = getHour(ts.start_time)
-                        const end = getHour(ts.end_time)
-                        return hour - 1 > start && hour - 1 < end
+                        const start = getHour(ts.start_time);
+                        const end = getHour(ts.end_time);
+                        return hour - 1 > start && hour - 1 < end;
                     })">
                         <td class="text-muted" @click="handleFreeCellClick(hour)">—</td>
                     </template>
@@ -127,7 +147,6 @@ async function saveTripSheet() {
             </tbody>
         </table>
 
-        <!-- Модальное окно -->
         <div v-if="selectedRow !== null" class="modal fade show d-block" tabindex="-1" aria-labelledby="modalLabel">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -136,6 +155,10 @@ async function saveTripSheet() {
                         <button type="button" class="btn-close" @click="selectedRow = null"></button>
                     </div>
                     <div class="modal-body">
+                        <div v-if="errorMessage" class="alert alert-danger" role="alert">
+                            {{ errorMessage }}
+                        </div>
+
                         <div v-if="pendingOrders.length">
                             <ul class="list-group">
                                 <li v-for="order in pendingOrders" :key="order.id" class="list-group-item"
@@ -152,8 +175,9 @@ async function saveTripSheet() {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click="selectedRow = null">Закрыть</button>
-                        <button type="button" class="btn btn-primary" :disabled="!selectedOrder"
-                            @click="saveTripSheet">Сохранить</button>
+                        <button type="button" class="btn btn-primary" :disabled="!selectedOrder" @click="saveTripSheet">
+                            Сохранить
+                        </button>
                     </div>
                 </div>
             </div>
@@ -164,6 +188,10 @@ async function saveTripSheet() {
 <style scoped>
 .trip-sheet-widget {
     margin-top: 2rem;
+}
+
+.alert {
+    margin-bottom: 1rem;
 }
 
 td {

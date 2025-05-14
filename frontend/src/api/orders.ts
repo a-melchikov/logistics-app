@@ -1,19 +1,5 @@
 const API_URL = "http://localhost:8000";
 
-// Получаем токен из localStorage (или другого источника)
-function getAuthToken(): string | null {
-  return localStorage.getItem("access_token");
-}
-
-// Функция для создания заголовков с токеном
-function getAuthHeaders(): HeadersInit {
-  const token = getAuthToken();
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 export async function getAllOrders(filters = {}) {
   const params = new URLSearchParams(filters as any).toString();
   const response = await fetch(`${API_URL}/orders/?${params}`);
@@ -37,7 +23,7 @@ export async function createOrder(order: {
   date: string;
   status: string;
 }) {
-  const token = localStorage.getItem("access_token"); // Пример получения токена
+  const token = localStorage.getItem("access_token");
 
   const res = await fetch(`${API_URL}/orders/`, {
     method: "POST",
@@ -54,7 +40,7 @@ export async function createOrder(order: {
 }
 
 export async function deleteOrder(orderId: number) {
-  const token = localStorage.getItem("access_token"); // Пример получения токена
+  const token = localStorage.getItem("access_token");
 
   const res = await fetch(`${API_URL}/orders/${orderId}`, {
     method: "DELETE",
