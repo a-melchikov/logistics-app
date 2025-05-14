@@ -76,15 +76,16 @@ async def get_trip_sheets_by_vehicle(
         description="ID транспортного средства, для которого нужно получить путевые листы",
     ),
 ) -> list[TripSheetResponse]:
+    vehicle = await VehicleDAO.find_one_or_none_by_id(vehicle_id)
+    if not vehicle:
+        logger.warning(f"Транспортное средство с ID {vehicle_id} не найдено")
+        raise VehicleNotFoundException
+
     trip_sheets = await TripSheetDAO.find_all(vehicle_id=vehicle_id)
-    if not trip_sheets:
-        logger.warning(
-            f"Путевые листы для транспортного средства с ID {vehicle_id} не найдены"
-        )
-        raise TripSheetNotFoundException
     logger.info(
         f"Найдено путевых листов для транспортного средства с ID {vehicle_id}: {len(trip_sheets)}"
     )
+
     return trip_sheets
 
 

@@ -103,12 +103,12 @@ async def get_vehicle_orders_history(
         ..., description="ID машины, для которой нужно получить историю заказов"
     ),
 ) -> list[OrderResponse]:
-    orders = await VehicleDAO.get_orders_for_vehicle(vehicle_id)
-
-    if not orders:
-        logger.warning(f"Не найдены заказы для машины с ID {vehicle_id}")
+    vehicle = await VehicleDAO.find_one_or_none_by_id(vehicle_id)
+    if not vehicle:
+        logger.warning(f"Машина с ID {vehicle_id} не найдена")
         raise VehicleNotFoundException
 
+    orders = await VehicleDAO.get_orders_for_vehicle(vehicle_id)
     logger.info(f"История заказов для машины с ID {vehicle_id}: {len(orders)} заказов")
 
     return orders
